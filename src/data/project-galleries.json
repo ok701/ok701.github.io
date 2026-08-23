@@ -1,0 +1,18 @@
+{
+  "cable-driven-bedside": [
+    "/images/projects/cable-driven-bedside/01.png",
+    "/images/projects/cable-driven-bedside/02.jpg"
+  ],
+  "disturbance-compensation": [
+    "/images/projects/disturbance-compensation/01.png"
+  ],
+  "embedded-control": [
+    "/images/projects/embedded-control/01.svg"
+  ],
+  "mobile-manipulator": [
+    "/images/projects/mobile-manipulator/01.png"
+  ],
+  "motor-control": [
+    "/images/projects/motor-control/01.svg"
+  ]
+}

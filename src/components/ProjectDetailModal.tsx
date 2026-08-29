@@ -163,7 +163,7 @@ export default function ProjectDetailModal({
               {project.keywords.map((kw) => (
                 <span
                   key={kw}
-                  className="text-[11px] font-medium bg-slate-50 text-slate-600 px-2.5 py-0.5 rounded-md border border-slate-200/80"
+                  className="text-[11px] font-medium bg-[#f3eadc] text-[#4a2d1f] px-2.5 py-0.5 rounded-md border border-[#e2cfb7]"
                 >
                   {kw}
                 </span>

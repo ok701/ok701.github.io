@@ -84,9 +84,12 @@ export default function BackgroundDetailModal({
             <div className="w-full h-28 sm:h-32 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center p-4 mb-6 shadow-inner relative">
               <div className="relative w-full h-full">
                 <Image
-                  src={item.logo}
+                  src={item.thumbnail || item.logo}
                   alt={item.organization}
                   fill
+                  sizes="(min-width: 640px) 512px, calc(100vw - 80px)"
+                  loading="lazy"
+                  decoding="async"
                   className="object-contain"
                 />
               </div>

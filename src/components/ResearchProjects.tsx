@@ -1,24 +1,37 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { projects } from '@/data/projects';
+import { useState, useEffect, useMemo } from 'react';
+import { mergeProjectsWithDefaults, projects } from '@/data/projects';
 import { Project } from '@/types';
 import ProjectFilter from './ProjectFilter';
 import ProjectCard from './ProjectCard';
 import ProjectDetailModal from './ProjectDetailModal';
 
-const CATEGORIES = ['Robotics', 'Embedded'];
-
 export default function ResearchProjects() {
   const [projectList, setProjectList] = useState<Project[]>(projects);
-  const [activeCategory, setActiveCategory] = useState<'Robotics' | 'Embedded'>('Robotics');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+
+  // Dynamically extract unique categories
+  const categories = useMemo(() => {
+    const unique = Array.from(new Set(projectList.map((p) => p.category).filter(Boolean)));
+    return unique.length > 0 ? unique : ['Robotics', 'AI', 'Motor Control'];
+  }, [projectList]);
+
+  const [activeCategory, setActiveCategory] = useState<string>('Robotics');
+
+  useEffect(() => {
+    if (categories.length > 0 && !categories.includes(activeCategory)) {
+      setActiveCategory(categories[0]);
+    }
+  }, [categories, activeCategory]);
 
   useEffect(() => {
     const saved = localStorage.getItem('jwl_cms_projects');
     if (saved) {
       try {
-        setProjectList(JSON.parse(saved));
+        const mergedProjects = mergeProjectsWithDefaults(JSON.parse(saved));
+        setProjectList(mergedProjects);
+        localStorage.setItem('jwl_cms_projects', JSON.stringify(mergedProjects));
       } catch {
         // fallback
       }
@@ -33,16 +46,17 @@ export default function ResearchProjects() {
         <h2 className="text-[28px] font-light text-[#0f172a] mb-3">Research Projects</h2>
         
         <ProjectFilter
-          categories={CATEGORIES}
+          categories={categories}
           activeCategory={activeCategory}
-          onCategoryChange={(cat) => setActiveCategory(cat as 'Robotics' | 'Embedded')}
+          onCategoryChange={(cat) => setActiveCategory(cat)}
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredProjects.map((project) => (
+          {filteredProjects.map((project, index) => (
             <ProjectCard
               key={project.id}
               project={project}
+              priority={index === 0}
               onClick={() => setSelectedProject(project)}
             />
           ))}

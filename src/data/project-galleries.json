@@ -1,7 +1,8 @@
 {
   "cable-driven-bedside": [
     "/images/projects/cable-driven-bedside/01.png",
-    "/images/projects/cable-driven-bedside/02.jpg"
+    "/images/projects/cable-driven-bedside/02.png",
+    "/images/projects/cable-driven-bedside/03.jpg"
   ],
   "disturbance-compensation": [
     "/images/projects/disturbance-compensation/01.png",
@@ -15,5 +16,8 @@
   ],
   "motor-control": [
     "/images/projects/motor-control/01.svg"
+  ],
+  "motor-fault": [
+    "/images/projects/motor-fault/01.png"
   ]
 }

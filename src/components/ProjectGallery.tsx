@@ -104,6 +104,7 @@ export default function ProjectGallery({ images, title }: ProjectGalleryProps) {
                 src={src}
                 alt={`${title} - image ${index + 1}`}
                 fill
+                sizes="(min-width: 640px) 672px, calc(100vw - 48px)"
                 className="object-cover pointer-events-none"
                 priority={index === 0}
                 draggable={false}

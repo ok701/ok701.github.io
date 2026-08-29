@@ -3,6 +3,8 @@ import { profile } from '@/data/profile';
 import SocialLinks from './SocialLinks';
 
 export default function Profile() {
+  const profileTextColor = 'text-[#0f172a]';
+
   return (
     <section id="profile" className="pt-24 pb-8 px-6">
       <div className="max-w-[1100px] mx-auto">
@@ -20,17 +22,17 @@ export default function Profile() {
 
           {/* Info */}
           <div className="flex-1 text-center md:text-left">
-            <h1 className="text-3xl md:text-4xl font-extrabold text-[#0f172a] mb-2 tracking-tight">
+            <h1 className={`text-3xl md:text-4xl font-extrabold ${profileTextColor} mb-2 tracking-tight`}>
               {profile.name}
             </h1>
-            <p className="text-slate-500 text-base md:text-lg font-medium mb-4">
+            <p className={`${profileTextColor} text-base md:text-lg font-medium mb-4 opacity-85`}>
               {profile.subtitle}
             </p>
 
             {profile.bio.map((paragraph, i) => (
               <p
                 key={i}
-                className="text-slate-600 text-base leading-relaxed mb-3 last:mb-0"
+                className={`${profileTextColor} text-base leading-relaxed mb-3 last:mb-0 opacity-90`}
               >
                 {paragraph}
               </p>
@@ -41,7 +43,7 @@ export default function Profile() {
               {profile.researchInterests.map((interest) => (
                 <span
                   key={interest}
-                  className="text-xs bg-[#eef3f8] text-[#1e3e62] px-2.5 py-1 rounded-full font-semibold border border-[#d3e0ed]"
+                  className="text-xs bg-[#f3eadc] text-[#4a2d1f] px-2.5 py-1 rounded-full font-semibold border border-[#e2cfb7]"
                 >
                   {interest}
                 </span>

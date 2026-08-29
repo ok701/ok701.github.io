@@ -28,18 +28,15 @@ export default function BackgroundCard({ item, onClick }: BackgroundCardProps) {
           <div className="w-full h-28 sm:h-32 rounded-xl bg-slate-50/80 border border-slate-100/90 flex items-center justify-center p-3 mb-4 group-hover:bg-white group-hover:scale-[1.02] group-hover:shadow-[0_6px_20px_rgba(15,23,42,0.06)] transition-all duration-300 relative overflow-hidden">
             <div className="relative w-full h-full">
               <Image
-                src={item.logo}
+                src={item.thumbnail || item.logo}
                 alt={item.organization}
                 fill
+                sizes="340px"
+                loading="lazy"
+                decoding="async"
                 className="object-contain"
               />
             </div>
-            {item.isCurrent && (
-              <span className="absolute top-2.5 right-2.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#0f172a] text-white shadow-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Current
-              </span>
-            )}
           </div>
         ) : (
           <div className="w-full h-28 sm:h-32 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center mb-4 text-slate-400 font-bold text-lg">

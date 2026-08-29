@@ -2,22 +2,25 @@
 
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import Image from 'next/image';
-import { background } from '@/data/background';
+import { background, normalizeBackgroundImages } from '@/data/background';
 import { BackgroundItem } from '@/types';
 
 export default function Background() {
   const [backgroundList, setBackgroundList] = useState<BackgroundItem[]>(background);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [displayItem, setDisplayItem] = useState<BackgroundItem | null>(null);
   const [mobileActiveIndex, setMobileActiveIndex] = useState(0);
-  const lastItemRef = useRef<BackgroundItem | null>(null);
   const expandedRef = useRef<HTMLDivElement>(null);
   const mobileScrollRef = useRef<HTMLDivElement>(null);
+  const mobileScrollFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('jwl_cms_background');
     if (saved) {
       try {
-        setBackgroundList(JSON.parse(saved));
+        const nextBackground = JSON.parse(saved).map(normalizeBackgroundImages);
+        setBackgroundList(nextBackground);
+        localStorage.setItem('jwl_cms_background', JSON.stringify(nextBackground));
       } catch {
         // fallback
       }
@@ -36,36 +39,48 @@ export default function Background() {
     });
   }, [backgroundList]);
 
-  // Keep the last selected item rendered during close animation
-  if (selectedId) {
-    lastItemRef.current =
-      sortedItems.find((i) => i.id === selectedId) || null;
-  }
-  const displayItem = lastItemRef.current;
   const isOpen = selectedId !== null;
 
   const handleSelect = useCallback((id: string) => {
     setSelectedId((prev) => {
       const next = prev === id ? null : id;
       if (next !== null) {
+        setDisplayItem(sortedItems.find((i) => i.id === next) || null);
         setTimeout(() => {
           expandedRef.current?.scrollIntoView({
             behavior: 'smooth',
             block: 'nearest',
           });
         }, 100);
+      } else {
+        setTimeout(() => setDisplayItem(null), 450);
       }
       return next;
     });
-  }, []);
+  }, [sortedItems]);
 
   // Track mobile scroll index
   const handleMobileScroll = () => {
     if (!mobileScrollRef.current) return;
-    const { scrollLeft, clientWidth } = mobileScrollRef.current;
-    const index = Math.round(scrollLeft / clientWidth);
-    setMobileActiveIndex(index);
+    if (mobileScrollFrameRef.current !== null) return;
+
+    mobileScrollFrameRef.current = requestAnimationFrame(() => {
+      mobileScrollFrameRef.current = null;
+      if (!mobileScrollRef.current) return;
+
+      const { scrollLeft, clientWidth } = mobileScrollRef.current;
+      const index = Math.round(scrollLeft / clientWidth);
+      setMobileActiveIndex((prev) => (prev === index ? prev : index));
+    });
   };
+
+  useEffect(() => {
+    return () => {
+      if (mobileScrollFrameRef.current !== null) {
+        cancelAnimationFrame(mobileScrollFrameRef.current);
+      }
+    };
+  }, []);
 
   // Calculate size for index based on hoveredIdx (macOS Dock curve on desktop)
   const getSize = (index: number) => {
@@ -123,8 +138,10 @@ export default function Background() {
                     <div className="relative overflow-hidden max-w-full bg-transparent shadow-none">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={item.logo}
+                        src={item.thumbnail || item.logo}
                         alt={item.organization || item.id}
+                        loading={idx === 0 ? 'eager' : 'lazy'}
+                        decoding="async"
                         className="max-h-[300px] w-auto h-auto max-w-full object-contain block mx-auto rounded-none shadow-none"
                         draggable={false}
                         style={{
@@ -218,7 +235,7 @@ export default function Background() {
                         width: `${size}px`,
                         height: `${size}px`,
                         transition:
-                          'width 0.2s cubic-bezier(0.16, 1, 0.3, 1), height 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease',
+                          'width 0.34s cubic-bezier(0.22, 1, 0.36, 1), height 0.34s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.28s ease',
                         willChange: 'width, height',
                       }}
                     >
@@ -232,12 +249,13 @@ export default function Background() {
                           }}
                         >
                           <Image
-                            src={item.logo}
+                            src={item.thumbnail || item.logo}
                             alt={item.organization || item.id}
                             fill
-                            sizes="180px"
-                            quality={95}
+                            sizes="112px"
                             className="object-cover"
+                            loading="lazy"
+                            decoding="async"
                             draggable={false}
                           />
                         </div>
@@ -249,13 +267,6 @@ export default function Background() {
                         </div>
                       )}
 
-                      {/* Current indicator for Samsung */}
-                      {item.isCurrent && (
-                        <span className="absolute top-2 right-2 flex h-2.5 w-2.5 z-10">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
-                        </span>
-                      )}
                     </button>
                   );
                 })}
@@ -302,6 +313,8 @@ export default function Background() {
                         src={displayItem.logo}
                         alt={displayItem.organization || displayItem.id}
                         className="max-h-[440px] sm:max-h-[520px] w-auto h-auto object-contain block mx-auto rounded-none shadow-none"
+                        loading="lazy"
+                        decoding="async"
                         draggable={false}
                         style={{
                           maskImage:

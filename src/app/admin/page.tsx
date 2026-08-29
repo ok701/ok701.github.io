@@ -1,11 +1,18 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Project, BackgroundItem, NewsItem } from '@/types';
-import { projects as initialProjects } from '@/data/projects';
-import { background as initialBackground } from '@/data/background';
+import {
+  mergeProjectsWithDefaults,
+  normalizeProjectImages,
+  projects as initialProjects,
+} from '@/data/projects';
+import {
+  background as initialBackground,
+  normalizeBackgroundImages,
+} from '@/data/background';
 import { news as initialNews } from '@/data/news';
 
 export default function AdminPage() {
@@ -37,9 +44,6 @@ export default function AdminPage() {
   // Code Export Modal
   const [exportModal, setExportModal] = useState<{ title: string; code: string; filename: string } | null>(null);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const bgFileInputRef = useRef<HTMLInputElement>(null);
-
   useEffect(() => {
     // Check if session token exists
     const token = localStorage.getItem('jwl_admin_token');
@@ -52,8 +56,18 @@ export default function AdminPage() {
     const savedBackground = localStorage.getItem('jwl_cms_background');
     const savedNews = localStorage.getItem('jwl_cms_news');
 
-    setProjectsList(savedProjects ? JSON.parse(savedProjects) : initialProjects);
-    setBackgroundList(savedBackground ? JSON.parse(savedBackground) : initialBackground);
+    const loadedProjects = savedProjects
+      ? mergeProjectsWithDefaults(JSON.parse(savedProjects))
+      : initialProjects;
+
+    setProjectsList(loadedProjects);
+    localStorage.setItem('jwl_cms_projects', JSON.stringify(loadedProjects));
+    const loadedBackground = savedBackground
+      ? JSON.parse(savedBackground).map(normalizeBackgroundImages)
+      : initialBackground;
+
+    setBackgroundList(loadedBackground);
+    localStorage.setItem('jwl_cms_background', JSON.stringify(loadedBackground));
     setNewsList(savedNews ? JSON.parse(savedNews) : initialNews);
   }, []);
 
@@ -82,28 +96,18 @@ export default function AdminPage() {
     setPassword('');
   };
 
-  // Image Upload handler (Data URL for instant client persistence)
-  const handleImageFile = (file: File, callback: (url: string) => void) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        callback(e.target.result as string);
-        showToast('Image loaded successfully!');
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
   // Save changes to localStorage & trigger feedback
   const saveProjects = (newList: Project[]) => {
-    setProjectsList(newList);
-    localStorage.setItem('jwl_cms_projects', JSON.stringify(newList));
+    const normalizedProjects = newList.map(normalizeProjectImages);
+    setProjectsList(normalizedProjects);
+    localStorage.setItem('jwl_cms_projects', JSON.stringify(normalizedProjects));
     showToast('Projects updated!');
   };
 
   const saveBackground = (newList: BackgroundItem[]) => {
-    setBackgroundList(newList);
-    localStorage.setItem('jwl_cms_background', JSON.stringify(newList));
+    const normalizedBackground = newList.map(normalizeBackgroundImages);
+    setBackgroundList(normalizedBackground);
+    localStorage.setItem('jwl_cms_background', JSON.stringify(normalizedBackground));
     showToast('Background updated!');
   };
 
@@ -495,7 +499,13 @@ export default function AdminPage() {
 
                     <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-200">
                       {item.logo ? (
-                        <Image src={item.logo} alt={item.organization} fill className="object-cover" />
+                        <Image
+                          src={item.thumbnail || item.logo}
+                          alt={item.organization}
+                          fill
+                          sizes="56px"
+                          className="object-cover"
+                        />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-[10px] text-slate-400">
                           No Photo
@@ -506,11 +516,6 @@ export default function AdminPage() {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-bold text-slate-500 tabular-nums">{item.year}</span>
-                        {item.isCurrent && (
-                          <span className="bg-emerald-50 text-emerald-600 text-[10px] px-1.5 py-0.2 rounded font-semibold">
-                            Current
-                          </span>
-                        )}
                       </div>
                       <h3 className="text-sm font-bold text-[#0f172a] truncate">{item.organization}</h3>
                       <p className="text-xs text-slate-500 truncate max-w-xl">{item.summary}</p>
@@ -661,19 +666,26 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">Category</label>
-                  <select
-                    value={editingProject.category || 'Robotics'}
-                    onChange={(e) =>
-                      setEditingProject({
-                        ...editingProject,
-                        category: e.target.value as 'Robotics' | 'Embedded',
-                      })
-                    }
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-[#0f172a] focus:outline-none bg-white"
-                  >
-                    <option value="Robotics">Robotics</option>
-                    <option value="Embedded">Embedded</option>
-                  </select>
+                  <input
+                    type="text"
+                    value={editingProject.category || ''}
+                    onChange={(e) => setEditingProject({ ...editingProject, category: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-[#0f172a] focus:outline-none"
+                    placeholder="e.g. Robotics, AI, Motor Control..."
+                  />
+                  {/* Quick Category Suggestion Chips */}
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    {['Robotics', 'AI', 'Motor Control', 'Hardware'].map((cat) => (
+                      <button
+                        type="button"
+                        key={cat}
+                        onClick={() => setEditingProject({ ...editingProject, category: cat })}
+                        className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-0.5 rounded-md font-medium cursor-pointer transition-colors"
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -688,38 +700,55 @@ export default function AdminPage() {
                 />
               </div>
 
-              {/* Image Upload */}
+              {/* Project images are path-based: public/images/projects/<galleryFolder>/ */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Thumbnail Image</label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="text"
-                    value={editingProject.thumbnail}
-                    onChange={(e) => setEditingProject({ ...editingProject, thumbnail: e.target.value })}
-                    className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-[#0f172a] focus:outline-none"
-                    placeholder="/images/projects/folder/image.png"
-                  />
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        handleImageFile(file, (url) => {
-                          setEditingProject({ ...editingProject, thumbnail: url, gallery: [url] });
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Project Image Folder</label>
+                <div className="flex items-center gap-4 p-3 bg-slate-50 border border-slate-200 rounded-2xl">
+                  <div className="relative w-24 h-16 rounded-xl overflow-hidden bg-slate-200 flex-shrink-0 border border-slate-300">
+                    {editingProject.thumbnail ? (
+                      <Image src={editingProject.thumbnail} alt="Thumbnail" fill className="object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[10px] text-slate-400">
+                        No Photo
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 space-y-2">
+                    <input
+                      type="text"
+                      value={editingProject.galleryFolder || ''}
+                      onChange={(e) => {
+                        const galleryFolder = e.target.value.trim();
+                        const thumbnail = galleryFolder
+                          ? `/images/projects/${galleryFolder}/01.png`
+                          : editingProject.thumbnail;
+
+                        setEditingProject({
+                          ...editingProject,
+                          galleryFolder,
+                          thumbnail,
+                          gallery: thumbnail ? [thumbnail] : [],
                         });
+                      }}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-[#0f172a] focus:outline-none font-mono"
+                      placeholder="motor-fault"
+                    />
+                    <input
+                      type="text"
+                      value={editingProject.thumbnail}
+                      onChange={(e) =>
+                        setEditingProject({
+                          ...editingProject,
+                          thumbnail: e.target.value,
+                          gallery: [e.target.value],
+                        })
                       }
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold px-3.5 py-2.5 rounded-xl transition-colors cursor-pointer"
-                  >
-                    Choose Photo
-                  </button>
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-[#0f172a] focus:outline-none font-mono"
+                      placeholder="/images/projects/motor-fault/01.png"
+                    />
+                    <p className="text-[11px] text-slate-400 mt-1">Use /images/projects/... paths only</p>
+                  </div>
                 </div>
               </div>
 
@@ -913,38 +942,42 @@ export default function AdminPage() {
                 />
               </div>
 
-              {/* Photo Upload */}
+              {/* Background images are path-based: public/images/organizations/... */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Photo Image</label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="text"
-                    value={editingBackground.logo || ''}
-                    onChange={(e) => setEditingBackground({ ...editingBackground, logo: e.target.value })}
-                    className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-[#0f172a] focus:outline-none"
-                    placeholder="/images/organizations/1.jpg"
-                  />
-                  <input
-                    type="file"
-                    ref={bgFileInputRef}
-                    className="hidden"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        handleImageFile(file, (url) => {
-                          setEditingBackground({ ...editingBackground, logo: url });
-                        });
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Career / Organization Photo</label>
+                <div className="flex items-center gap-4 p-3 bg-slate-50 border border-slate-200 rounded-2xl">
+                  <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-slate-200 flex-shrink-0 border border-slate-300">
+                    {editingBackground.thumbnail || editingBackground.logo ? (
+                      <Image
+                        src={editingBackground.thumbnail || editingBackground.logo || ''}
+                        alt="Photo"
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[10px] text-slate-400">
+                        No Photo
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 space-y-2">
+                    <input
+                      type="text"
+                      value={editingBackground.logo || ''}
+                      onChange={(e) =>
+                        setEditingBackground(
+                          normalizeBackgroundImages({
+                            ...editingBackground,
+                            logo: e.target.value,
+                          })
+                        )
                       }
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => bgFileInputRef.current?.click()}
-                    className="bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold px-3.5 py-2.5 rounded-xl transition-colors cursor-pointer"
-                  >
-                    Choose Photo
-                  </button>
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-[#0f172a] focus:outline-none font-mono"
+                      placeholder="/images/organizations/1.jpg"
+                    />
+                    <p className="text-[11px] text-slate-400 mt-1">Use /images/organizations/... paths only</p>
+                  </div>
                 </div>
               </div>
             </div>

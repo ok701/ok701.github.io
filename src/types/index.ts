@@ -32,9 +32,9 @@ export interface Project {
   galleryFolder?: string;
   gallery?: string[];
   description: string;
-  keywords: string[];
-  category: 'Robotics' | 'Embedded';
   period: string;
+  keywords: string[];
+  category: string;
   githubUrl?: string;
   paperUrl?: string;
   videoUrl?: string;
@@ -55,5 +55,6 @@ export interface BackgroundItem {
   summary?: string;
   description?: string[];
   logo?: string;
+  thumbnail?: string;
   isCurrent?: boolean;
 }

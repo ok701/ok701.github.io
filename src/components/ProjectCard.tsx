@@ -6,9 +6,10 @@ import { Project } from '@/types';
 interface ProjectCardProps {
   project: Project;
   onClick: () => void;
+  priority?: boolean;
 }
 
-export default function ProjectCard({ project, onClick }: ProjectCardProps) {
+export default function ProjectCard({ project, onClick, priority = false }: ProjectCardProps) {
   return (
     <div
       onClick={onClick}
@@ -28,6 +29,10 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
           src={project.thumbnail}
           alt={project.title}
           fill
+          sizes="(min-width: 768px) 520px, calc(100vw - 48px)"
+          priority={priority}
+          loading={priority ? undefined : 'lazy'}
+          decoding="async"
           className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
         />
         {project.venueBadge && (

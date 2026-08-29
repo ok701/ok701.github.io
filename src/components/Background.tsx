@@ -1,26 +1,38 @@
 'use client';
 
-import { useState, useRef, useCallback, useMemo } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { background } from '@/data/background';
 import { BackgroundItem } from '@/types';
 
 export default function Background() {
+  const [backgroundList, setBackgroundList] = useState<BackgroundItem[]>(background);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const lastItemRef = useRef<BackgroundItem | null>(null);
   const expandedRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('jwl_cms_background');
+    if (saved) {
+      try {
+        setBackgroundList(JSON.parse(saved));
+      } catch {
+        // fallback
+      }
+    }
+  }, []);
 
   // Active hover index
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   // 1, 2, 3, 4 순서대로 정렬
   const sortedItems = useMemo(() => {
-    return [...background].sort((a, b) => {
+    return [...backgroundList].sort((a, b) => {
       const orderA = a.order ?? Infinity;
       const orderB = b.order ?? Infinity;
       return orderA - orderB;
     });
-  }, []);
+  }, [backgroundList]);
 
   // Keep the last selected item rendered during close animation
   if (selectedId) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { projects } from '@/data/projects';
 import { Project } from '@/types';
 import ProjectFilter from './ProjectFilter';
@@ -10,10 +10,22 @@ import ProjectDetailModal from './ProjectDetailModal';
 const CATEGORIES = ['Robotics', 'Embedded'];
 
 export default function ResearchProjects() {
+  const [projectList, setProjectList] = useState<Project[]>(projects);
   const [activeCategory, setActiveCategory] = useState<'Robotics' | 'Embedded'>('Robotics');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
-  const filteredProjects = projects.filter((p) => p.category === activeCategory);
+  useEffect(() => {
+    const saved = localStorage.getItem('jwl_cms_projects');
+    if (saved) {
+      try {
+        setProjectList(JSON.parse(saved));
+      } catch {
+        // fallback
+      }
+    }
+  }, []);
+
+  const filteredProjects = projectList.filter((p) => p.category === activeCategory);
 
   return (
     <section id="research" className="py-8 px-6">

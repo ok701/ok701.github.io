@@ -22,7 +22,7 @@ export default function Background() {
     }
   }, []);
 
-  // Active hover index
+  // Active hover index (desktop only)
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   // 1, 2, 3, 4 순서대로 정렬
@@ -57,9 +57,9 @@ export default function Background() {
     });
   }, []);
 
-  // Calculate size for index based on hoveredIdx (macOS Dock curve) — Enlarged base & magnification
+  // Calculate size for index based on hoveredIdx (macOS Dock curve on desktop)
   const getSize = (index: number) => {
-    const BASE_SIZE = 64; // 기본 64px (이전 54px에서 확대)
+    const BASE_SIZE = 64; // 데스크톱 기본 64px
     if (hoveredIdx === null) return BASE_SIZE;
 
     const dist = Math.abs(index - hoveredIdx);
@@ -70,28 +70,36 @@ export default function Background() {
   };
 
   return (
-    <section id="background" className="py-6 px-6 select-none">
+    <section id="background" className="py-6 px-4 sm:px-6 select-none overflow-hidden">
       <div className="max-w-[1100px] mx-auto">
         {/* Title */}
-        <h2 className="text-[28px] font-light text-[#0f172a] mb-1 leading-tight">Background</h2>
+        <h2 className="text-2xl sm:text-[28px] font-light text-[#0f172a] mb-1 leading-tight">
+          Background
+        </h2>
 
-        {/* Thumbnail Strip with bold gray line stretching wide across */}
-        <div className="w-full relative pt-1 pb-2 flex items-center justify-center overflow-visible">
-          {/* Bold solid gray timeline line stretching all the way across */}
+        {/* Thumbnail Strip Container — fully responsive & mobile scrollable */}
+        <div className="w-full relative pt-1 pb-2 flex items-center justify-start sm:justify-center overflow-x-auto sm:overflow-visible scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
+          {/* Desktop Bold timeline line */}
           <div
-            className="absolute left-0 right-0 pointer-events-none z-0 rounded-full bg-slate-300"
+            className="hidden sm:block absolute left-0 right-0 pointer-events-none z-0 rounded-full bg-slate-300"
             style={{ top: '50%', transform: 'translateY(-50%)', height: '4px' }}
           />
 
           <div
             onMouseLeave={() => setHoveredIdx(null)}
-            className="relative z-10 inline-flex items-center justify-center min-w-max px-4 py-2 overflow-visible"
+            className="relative z-10 inline-flex items-center justify-start sm:justify-center min-w-max px-2 sm:px-4 py-2 overflow-visible"
           >
-            {/* macOS Dock Magnification Row — Enlarged */}
-            <div className="flex items-center justify-center gap-3 h-[112px]">
+            {/* Mobile Timeline line behind thumbnails inside scroll area */}
+            <div
+              className="sm:hidden absolute left-4 right-4 pointer-events-none z-0 rounded-full bg-slate-300"
+              style={{ top: '50%', transform: 'translateY(-50%)', height: '3px' }}
+            />
+
+            {/* Thumbnails Row — Static clean size on mobile, macOS Dock magnification on desktop */}
+            <div className="flex items-center justify-start sm:justify-center gap-2.5 sm:gap-3 h-[76px] sm:h-[112px]">
               {sortedItems.map((item, index) => {
                 const isSelected = selectedId === item.id;
-                const size = getSize(index);
+                const desktopSize = getSize(index);
 
                 return (
                   <button
@@ -101,26 +109,27 @@ export default function Background() {
                     title={item.organization || item.id}
                     className={`
                       overflow-hidden bg-white relative cursor-pointer flex-shrink-0
-                      rounded-2xl focus:outline-none
+                      rounded-xl sm:rounded-2xl focus:outline-none transition-all
+                      w-[52px] h-[52px] sm:w-[var(--d-size)] sm:h-[var(--d-size)]
                       ${
                         isSelected
-                          ? 'shadow-[0_10px_28px_rgba(0,0,0,0.2)] ring-2 ring-[#0f172a] z-20'
-                          : 'shadow-[0_3px_10px_rgba(0,0,0,0.1)] hover:shadow-[0_10px_24px_rgba(0,0,0,0.16)] z-10'
+                          ? 'shadow-[0_8px_20px_rgba(0,0,0,0.18)] ring-2 ring-[#0f172a] z-20 scale-105 sm:scale-100'
+                          : 'shadow-[0_2px_8px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.15)] z-10'
                       }
                     `}
-                    style={{
-                      width: `${size}px`,
-                      height: `${size}px`,
-                      transition:
-                        'width 0.2s cubic-bezier(0.16, 1, 0.3, 1), height 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease',
-                      willChange: 'width, height',
-                    }}
+                    style={
+                      {
+                        '--d-size': `${desktopSize}px`,
+                        transition:
+                          'width 0.2s cubic-bezier(0.16, 1, 0.3, 1), height 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, transform 0.2s ease',
+                        willChange: 'width, height, transform',
+                      } as React.CSSProperties
+                    }
                   >
                     {item.logo ? (
                       <div
                         className="relative w-full h-full"
                         style={{
-                          // Balanced 0.35px blur for smooth antialiasing
                           filter: 'blur(0.35px)',
                           transform: 'translateZ(0)',
                           backfaceVisibility: 'hidden',
@@ -130,7 +139,7 @@ export default function Background() {
                           src={item.logo}
                           alt={item.organization || item.id}
                           fill
-                          sizes="180px"
+                          sizes="(max-width: 640px) 100px, 180px"
                           quality={95}
                           className="object-cover"
                           draggable={false}
@@ -138,7 +147,7 @@ export default function Background() {
                       </div>
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-slate-200">
-                        <span className="text-[11px] font-bold text-slate-500">
+                        <span className="text-[10px] sm:text-[11px] font-bold text-slate-500">
                           {item.organization || item.id}
                         </span>
                       </div>
@@ -146,9 +155,9 @@ export default function Background() {
 
                     {/* Current indicator for Samsung */}
                     {item.isCurrent && (
-                      <span className="absolute top-2 right-2 flex h-2.5 w-2.5 z-10">
+                      <span className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 flex h-2 w-2 sm:h-2.5 sm:w-2.5 z-10">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-emerald-500" />
                       </span>
                     )}
                   </button>
@@ -158,7 +167,7 @@ export default function Background() {
           </div>
         </div>
 
-        {/* Expanded Detail — Enlarged photo and comfortable balanced spacing */}
+        {/* Expanded Detail — Fully responsive on mobile & desktop */}
         <div
           ref={expandedRef}
           className="overflow-hidden"
@@ -171,7 +180,7 @@ export default function Background() {
         >
           {displayItem && (
             <div
-              className="pt-4 pb-4 flex flex-col items-center text-center mt-2"
+              className="pt-3 sm:pt-4 pb-4 flex flex-col items-center text-center mt-1 sm:mt-2 px-2 sm:px-4"
               style={{
                 transform: isOpen ? 'translateY(0)' : 'translateY(-10px)',
                 opacity: isOpen ? 1 : 0,
@@ -181,22 +190,22 @@ export default function Background() {
             >
               {/* Year displayed ABOVE the large photo */}
               {displayItem.year && (
-                <div className="mb-2">
-                  <span className="text-3xl sm:text-4xl font-bold text-slate-400/90 tracking-tight tabular-nums">
+                <div className="mb-1.5 sm:mb-2">
+                  <span className="text-2xl sm:text-4xl font-bold text-slate-400/90 tracking-tight tabular-nums">
                     {displayItem.year}
                   </span>
                 </div>
               )}
 
-              {/* Centered Image — Enlarged (max-h 520px), shadowless, bottom fade */}
-              <div className="w-full flex justify-center mt-1 mb-4">
+              {/* Centered Image — responsive max-height, shadowless, seamless bottom fade */}
+              <div className="w-full flex justify-center mt-1 mb-3 sm:mb-4">
                 {displayItem.logo && (
                   <div className="relative overflow-hidden max-w-full bg-transparent shadow-none">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={displayItem.logo}
                       alt={displayItem.organization || displayItem.id}
-                      className="max-h-[440px] sm:max-h-[520px] w-auto h-auto object-contain block mx-auto rounded-none shadow-none"
+                      className="max-h-[260px] sm:max-h-[520px] w-auto h-auto max-w-full object-contain block mx-auto rounded-none shadow-none"
                       draggable={false}
                       style={{
                         maskImage:
@@ -210,14 +219,14 @@ export default function Background() {
               </div>
 
               {/* Clean Title & 1-line Description below photo */}
-              <div className="max-w-2xl mx-auto flex flex-col items-center px-4">
+              <div className="max-w-2xl mx-auto flex flex-col items-center px-2 sm:px-4">
                 {displayItem.organization && (
-                  <h3 className="text-lg sm:text-xl font-semibold text-[#0f172a] tracking-tight">
+                  <h3 className="text-base sm:text-xl font-semibold text-[#0f172a] tracking-tight leading-snug">
                     {displayItem.organization}
                   </h3>
                 )}
                 {displayItem.summary && (
-                  <p className="text-sm sm:text-[14px] text-slate-600 font-normal mt-1.5 leading-relaxed max-w-xl">
+                  <p className="text-xs sm:text-[14px] text-slate-600 font-normal mt-1 sm:mt-1.5 leading-relaxed max-w-xl">
                     {displayItem.summary}
                   </p>
                 )}

@@ -652,6 +652,100 @@ export default function AdminPage() {
                 </div>
               </div>
 
+              {/* Links Section (Paper, GitHub, Video, Custom Links) */}
+              <div className="pt-2 border-t border-slate-100">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-semibold text-slate-700">
+                    Project Links (Paper, GitHub, Video)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const currentLinks = editingProject.links || [];
+                      setEditingProject({
+                        ...editingProject,
+                        links: [
+                          ...currentLinks,
+                          { label: 'Paper (IEEE T-MRB)', url: 'https://doi.org/...', type: 'paper' },
+                        ],
+                      });
+                    }}
+                    className="text-xs font-semibold text-[#25527e] hover:text-[#1e3a8a] bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                  >
+                    + Add Link
+                  </button>
+                </div>
+
+                <div className="space-y-2.5">
+                  {(editingProject.links || []).map((link, linkIdx) => (
+                    <div
+                      key={linkIdx}
+                      className="flex items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                    >
+                      <select
+                        value={link.type || 'paper'}
+                        onChange={(e) => {
+                          const updatedLinks = [...(editingProject.links || [])];
+                          updatedLinks[linkIdx] = {
+                            ...link,
+                            type: e.target.value as 'paper' | 'github' | 'video' | 'project',
+                          };
+                          setEditingProject({ ...editingProject, links: updatedLinks });
+                        }}
+                        className="bg-white border border-slate-300 rounded-lg px-2 py-1.5 font-medium text-slate-700 focus:outline-none"
+                      >
+                        <option value="paper">📄 Paper</option>
+                        <option value="github">💻 GitHub</option>
+                        <option value="video">🎥 Video</option>
+                        <option value="project">🔗 Demo</option>
+                      </select>
+
+                      <input
+                        type="text"
+                        value={link.label}
+                        onChange={(e) => {
+                          const updatedLinks = [...(editingProject.links || [])];
+                          updatedLinks[linkIdx] = { ...link, label: e.target.value };
+                          setEditingProject({ ...editingProject, links: updatedLinks });
+                        }}
+                        placeholder="Label (e.g. Paper (IROS))"
+                        className="flex-1 bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none"
+                      />
+
+                      <input
+                        type="text"
+                        value={link.url}
+                        onChange={(e) => {
+                          const updatedLinks = [...(editingProject.links || [])];
+                          updatedLinks[linkIdx] = { ...link, url: e.target.value };
+                          setEditingProject({ ...editingProject, links: updatedLinks });
+                        }}
+                        placeholder="https://..."
+                        className="flex-1 bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 font-mono text-[11px] focus:outline-none"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updatedLinks = (editingProject.links || []).filter((_, i) => i !== linkIdx);
+                          setEditingProject({ ...editingProject, links: updatedLinks });
+                        }}
+                        className="text-rose-500 hover:text-rose-700 p-1 rounded hover:bg-rose-50 cursor-pointer"
+                        title="Remove link"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+
+                  {(!editingProject.links || editingProject.links.length === 0) && (
+                    <p className="text-[11px] text-slate-400 italic py-1">
+                      No custom links added yet. Click &ldquo;+ Add Link&rdquo; to add paper or repository links.
+                    </p>
+                  )}
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Description</label>
                 <textarea

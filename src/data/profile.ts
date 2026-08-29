@@ -27,8 +27,7 @@ export const profile: Profile = {
     },
     {
       label: 'GitHub',
-      // TODO: Replace with your actual GitHub URL
-      url: 'https://github.com/YOUR_GITHUB_USERNAME',
+      url: 'https://github.com/ok701',
       icon: 'github',
     },
     {

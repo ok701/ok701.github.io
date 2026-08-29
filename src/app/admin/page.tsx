@@ -107,6 +107,34 @@ export default function AdminPage() {
     showToast('Background updated!');
   };
 
+  const moveProject = (index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= projectsList.length) return;
+
+    const updated = [...projectsList];
+    const temp = updated[index];
+    updated[index] = updated[targetIndex];
+    updated[targetIndex] = temp;
+
+    saveProjects(updated);
+    showToast(`Project moved ${direction}!`);
+  };
+
+  const moveBackground = (index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= backgroundList.length) return;
+
+    const updated = [...backgroundList];
+    const temp = updated[index];
+    updated[index] = updated[targetIndex];
+    updated[targetIndex] = temp;
+
+    // Recalculate order field
+    const reordered = updated.map((item, idx) => ({ ...item, order: idx + 1 }));
+    saveBackground(reordered);
+    showToast(`Photo/Item moved ${direction}!`);
+  };
+
   const saveNews = (newList: NewsItem[]) => {
     setNewsList(newList);
     localStorage.setItem('jwl_cms_news', JSON.stringify(newList));
@@ -342,27 +370,50 @@ export default function AdminPage() {
                     <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">{project.description}</p>
                   </div>
 
-                  <div className="flex items-center justify-end gap-2 pt-4 mt-3 border-t border-slate-100">
-                    <button
-                      onClick={() => {
-                        setEditingProject({ ...project });
-                        setIsNewProject(false);
-                      }}
-                      className="text-xs font-semibold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (confirm(`Delete project "${project.title}"?`)) {
-                          const updated = projectsList.filter((_, i) => i !== idx);
-                          saveProjects(updated);
-                        }
-                      }}
-                      className="text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
-                    >
-                      Delete
-                    </button>
+                  <div className="flex items-center justify-between pt-4 mt-3 border-t border-slate-100">
+                    {/* Reorder Buttons */}
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-bold text-slate-400 mr-1 tabular-nums">#{idx + 1}</span>
+                      <button
+                        onClick={() => moveProject(idx, 'up')}
+                        disabled={idx === 0}
+                        title="Move Up"
+                        className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs cursor-pointer font-bold"
+                      >
+                        ▲
+                      </button>
+                      <button
+                        onClick={() => moveProject(idx, 'down')}
+                        disabled={idx === projectsList.length - 1}
+                        title="Move Down"
+                        className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs cursor-pointer font-bold"
+                      >
+                        ▼
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          setEditingProject({ ...project });
+                          setIsNewProject(false);
+                        }}
+                        className="text-xs font-semibold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm(`Delete project "${project.title}"?`)) {
+                            const updated = projectsList.filter((_, i) => i !== idx);
+                            saveProjects(updated);
+                          }
+                        }}
+                        className="text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -418,9 +469,29 @@ export default function AdminPage() {
                   className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex items-center justify-between gap-4"
                 >
                   <div className="flex items-center gap-4 min-w-0">
-                    <span className="w-6 text-center text-xs font-bold text-slate-400 tabular-nums">
-                      #{item.order ?? idx + 1}
-                    </span>
+                    <div className="flex items-center gap-1">
+                      <span className="w-6 text-center text-xs font-bold text-slate-400 tabular-nums">
+                        #{item.order ?? idx + 1}
+                      </span>
+                      <div className="flex flex-col gap-0.5">
+                        <button
+                          onClick={() => moveBackground(idx, 'up')}
+                          disabled={idx === 0}
+                          title="Move Up"
+                          className="w-5 h-4 flex items-center justify-center rounded bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed text-[9px] font-bold cursor-pointer"
+                        >
+                          ▲
+                        </button>
+                        <button
+                          onClick={() => moveBackground(idx, 'down')}
+                          disabled={idx === backgroundList.length - 1}
+                          title="Move Down"
+                          className="w-5 h-4 flex items-center justify-center rounded bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed text-[9px] font-bold cursor-pointer"
+                        >
+                          ▼
+                        </button>
+                      </div>
+                    </div>
 
                     <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-200">
                       {item.logo ? (

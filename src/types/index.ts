@@ -44,13 +44,15 @@ export interface Project {
 
 export interface BackgroundItem {
   id: string;
+  order?: number;
+  isMain?: boolean;
   organization: string;
-  role: string;
-  period: string;
+  role?: string;
+  period?: string;
   year?: string;
-  location: string;
+  location?: string;
   summary?: string;
-  description: string[];
+  description?: string[];
   logo?: string;
   isCurrent?: boolean;
 }

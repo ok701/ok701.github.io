@@ -1,55 +1,70 @@
 import { BackgroundItem } from '@/types';
-import orgLogos from './organization-logos.json';
-
-const logos = orgLogos as Record<string, string>;
 
 export const background: BackgroundItem[] = [
   {
-    id: 'seoultech',
-    organization: 'HRR Lab, SeoulTech',
-    role: 'Researcher',
-    period: '2021 — 2022',
+    id: 'bg-1',
+    order: 1,
+    year: '2019',
+    organization: 'Korean Augmentation to the U.S. Army',
+    summary: 'Senior KATUSA, platoon leadership and U.S.–Korean military liaison.',
+    logo: '/images/organizations/1.jpg',
+  },
+  {
+    id: 'bg-2',
+    order: 2,
     year: '2021',
-    location: 'Seoul, South Korea',
-    summary:
-      'Received B.S. in Mechanical System Design Engineering, advised by Prof. Jung-Yup Kim. Designed and built a lightweight 6-DoF manipulator with 3D-printed links and QDD actuators, developing whole-body task-space torque control and Center-of-Mass stabilization algorithms for mobile manipulation and VR teleoperation.',
-    description: [
-      'B.S. in Mechanical System Design Engineering, advised by Prof. Jung-Yup Kim.',
-      'Designed and built a lightweight 6-DoF manipulator using quasi-direct-drive actuators for mobile manipulation.',
-      'Developed ROS-based control system for simulation validation and real-hardware implementation.',
-    ],
-    logo: logos['seoultech'] || '/images/organizations/seoultech.jpg',
+    organization: 'Seoul National University of Science and Technology',
+    summary: 'B.S. in Mechanical System Design Engineering',
+    logo: '/images/organizations/2_main.jpg',
   },
   {
-    id: 'gist',
-    organization: 'AWEAR Lab, GIST',
-    role: 'Graduate Researcher',
-    period: '2023 — 2025',
+    id: 'bg-3',
+    order: 3,
+    year: '2021',
+    organization: 'Super Local Project',
+    summary: 'Encouragement Award',
+    logo: '/images/organizations/3.JPG',
+  },
+  {
+    id: 'bg-4',
+    order: 4,
+    year: '2022',
+    organization: 'Korea Police World Expo',
+    summary: 'Presented a robotic manipulator designed and developed by our team.',
+    logo: '/images/organizations/4.PNG',
+  },
+  {
+    id: 'bg-5',
+    order: 5,
     year: '2023',
-    location: 'Gwangju, South Korea',
-    summary:
-      'Completed M.S. in AI Convergence (Intelligent Robotics) under the supervision of Prof. Jiyeon Kang. Developed an upper-limb cable-driven rehabilitation robot with real-time force sensing and constrained tension allocation, and conducted human-subject experiments validating adaptive impedance control for assist-as-needed bedside training.',
-    description: [
-      'M.S. in AI Convergence (Intelligent Robotics), advised by Prof. Jiyeon Kang.',
-      'Developed cable-driven robotic platform for upper-limb rehabilitation with real-time force sensing and compliant control.',
-      'Conducted human-subject experiments validating adaptive impedance control for assist–resist rehabilitation.',
-    ],
-    logo: logos['gist'] || '/images/organizations/gist.jpg',
+    organization: 'H-Mobility Robotics Hackathon',
+    summary: 'Competed as a selected participant in a two-day robotics hackathon.',
+    logo: '/images/organizations/5.JPG',
   },
   {
-    id: 'samsung',
-    organization: 'Samsung Electronics',
-    role: 'Motor Control Engineer',
-    period: '2025 — Present',
-    year: '2025',
-    location: 'Suwon, South Korea',
-    isCurrent: true,
+    id: 'bg-6',
+    order: 6,
+    year: '2023',
+    organization: 'Gwangju Institute of Science and Technology',
     summary:
-      'Working on PMSM drive systems at Samsung Electronics, focusing on three-phase inverter hardware design, switching behavior analysis, and dynamometer-based motor testing. Developed automated lookup-table (LUT) generation tools for MTPA, field-weakening, and MTPV control strategies to enhance operational efficiency and dynamic drive performance.',
-    description: [
-      'Design and hardware debugging of three-phase inverters for PMSM drives, including switching behavior analysis, fault diagnosis, and dynamometer-based motor testing.',
-      'Developed automated LUT generation tool for MTPA, field-weakening, and MTPV control of PMSM/IPMSM drives.',
-    ],
-    logo: logos['samsung'] || '/images/organizations/samsung.png',
+      'M.S. in AI Convergence (Intelligent Robotics) — GIST was ranked 6th globally in Citations per Faculty, QS World University Rankings 2023.',
+    logo: '/images/organizations/6_main.jpg',
+  },
+  {
+    id: 'bg-7',
+    order: 7,
+    year: '2025',
+    isCurrent: true,
+    organization: 'Samsung Electronics',
+    summary: 'Motor Control Engineer, developing three-phase inverter hardware.',
+    logo: '/images/organizations/7_main.jpg',
+  },
+  {
+    id: 'bg-8',
+    order: 8,
+    year: '2026',
+    organization: 'Super Rookie Project',
+    summary: 'Final-round presenter, ranked in the top 10% of 300+ participants.',
+    logo: '/images/organizations/8.JPG',
   },
 ];

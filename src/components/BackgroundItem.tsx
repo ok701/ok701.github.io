@@ -11,7 +11,7 @@ export default function BackgroundItem({ item, isLast }: BackgroundItemProps) {
     <div className="relative flex gap-6">
       {/* Timeline line */}
       <div className="flex flex-col items-center flex-shrink-0">
-        <div className="w-3 h-3 rounded-full bg-[#25527e] border-2 border-[#f8fafc] shadow-[0_0_0_3px_rgba(37,82,126,0.15)] mt-1.5 z-10" />
+        <div className="w-3 h-3 rounded-full bg-[#25527e] border-2 border-[#F5F5F7] shadow-[0_0_0_3px_rgba(37,82,126,0.15)] mt-1.5 z-10" />
         {!isLast && (
           <div className="w-px flex-1 bg-slate-200 mt-1" />
         )}
@@ -47,14 +47,16 @@ export default function BackgroundItem({ item, isLast }: BackgroundItemProps) {
             </div>
           </div>
 
-          <ul className="mt-4 space-y-2">
-            {item.description.map((desc, i) => (
-              <li key={i} className="text-sm text-slate-600 leading-relaxed flex gap-2">
-                <span className="text-[#25527e] mt-1 flex-shrink-0">•</span>
-                <span>{desc}</span>
-              </li>
-            ))}
-          </ul>
+          {item.description && item.description.length > 0 && (
+            <ul className="mt-4 space-y-2">
+              {item.description.map((desc, i) => (
+                <li key={i} className="text-sm text-slate-600 leading-relaxed flex gap-2">
+                  <span className="text-[#25527e] mt-1 flex-shrink-0">•</span>
+                  <span>{desc}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
     </div>

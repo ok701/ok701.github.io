@@ -18,7 +18,7 @@ export default function ResearchProjects() {
   return (
     <section id="research" className="py-8 px-6">
       <div className="max-w-[1100px] mx-auto">
-        <h2 className="text-2xl font-bold mb-5 text-[#0f172a]">Research Projects</h2>
+        <h2 className="text-[28px] font-light text-[#0f172a] mb-3">Research Projects</h2>
         
         <ProjectFilter
           categories={CATEGORIES}

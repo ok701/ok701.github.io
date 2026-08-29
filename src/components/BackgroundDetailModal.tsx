@@ -113,7 +113,7 @@ export default function BackgroundDetailModal({
 
           {/* Natural Prose Description */}
           <div className="text-[15px] sm:text-base text-slate-600 leading-relaxed pt-4 border-t border-slate-100">
-            <p>{item.summary || item.description.join(' ')}</p>
+            <p>{item.summary || item.description?.join(' ') || ''}</p>
           </div>
         </div>
       </div>

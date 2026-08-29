@@ -1,23 +1,50 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { news } from '@/data/news';
 import { NewsItem as NewsItemType } from '@/types';
 import NewsItem from './NewsItem';
 
-export default function News() {
-  const [newsList, setNewsList] = useState<NewsItemType[]>(news);
+function normalizeNewsItems(items: NewsItemType[]) {
+  return items.map((item) => {
+    const isTmrbPaper = item.link?.includes('TMRB.2026.3722280');
+    const hasJcrBadge = item.description.includes('(JCR Q2)');
 
-  useEffect(() => {
+    if (!isTmrbPaper || hasJcrBadge) {
+      return item;
+    }
+
+    return {
+      ...item,
+      description: item.description.replace(
+        'IEEE Transactions on Medical Robotics and Bionics',
+        'IEEE Transactions on Medical Robotics and Bionics (JCR Q2)'
+      ),
+    };
+  });
+}
+
+export default function News() {
+  const [newsList] = useState<NewsItemType[]>(() => {
+    if (typeof window === 'undefined') {
+      return news;
+    }
+
     const saved = localStorage.getItem('jwl_cms_news');
     if (saved) {
       try {
-        setNewsList(JSON.parse(saved));
+        return normalizeNewsItems(JSON.parse(saved));
       } catch {
         // fallback
       }
     }
-  }, []);
+
+    return news;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('jwl_cms_news', JSON.stringify(newsList));
+  }, [newsList]);
 
   return (
     <section id="news" className="py-8 px-6">

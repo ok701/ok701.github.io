@@ -8,7 +8,7 @@ export const news: NewsItem[] = [
   },
   {
     date: '2026.07',
-    description: 'Paper accepted to IEEE Transactions on Medical Robotics and Bionics — "Enhanced Feedforward Force Controller for Cyclic Disturbance Compensation in a Gait-Training Robot."',
+    description: 'Paper accepted to IEEE Transactions on Medical Robotics and Bionics (JCR Q2) — "Enhanced Feedforward Force Controller for Cyclic Disturbance Compensation in a Gait-Training Robot."',
     link: 'https://doi.org/10.1109/TMRB.2026.3722280',
   },
   {

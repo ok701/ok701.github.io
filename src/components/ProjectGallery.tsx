@@ -18,6 +18,12 @@ export default function ProjectGallery({ images, title }: ProjectGalleryProps) {
 
   const total = images.length;
 
+  useEffect(() => {
+    setCurrentIndex(0);
+    setDragOffset(0);
+    setIsDragging(false);
+  }, [images, title]);
+
   const goToPrev = useCallback(() => {
     setCurrentIndex((prev) => Math.max(0, prev - 1));
   }, []);

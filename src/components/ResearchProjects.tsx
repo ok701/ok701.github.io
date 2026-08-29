@@ -7,6 +7,8 @@ import ProjectFilter from './ProjectFilter';
 import ProjectCard from './ProjectCard';
 import ProjectDetailModal from './ProjectDetailModal';
 
+const CATEGORY_ORDER = ['Robotics', 'AI', 'Motor Control'];
+
 export default function ResearchProjects() {
   const [projectList, setProjectList] = useState<Project[]>(projects);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -14,7 +16,21 @@ export default function ResearchProjects() {
   // Dynamically extract unique categories
   const categories = useMemo(() => {
     const unique = Array.from(new Set(projectList.map((p) => p.category).filter(Boolean)));
-    return unique.length > 0 ? unique : ['Robotics', 'AI', 'Motor Control'];
+    return unique.length > 0
+      ? unique.sort((a, b) => {
+          const indexA = CATEGORY_ORDER.indexOf(a);
+          const indexB = CATEGORY_ORDER.indexOf(b);
+
+          if (indexA === -1 && indexB === -1) {
+            return a.localeCompare(b);
+          }
+
+          if (indexA === -1) return 1;
+          if (indexB === -1) return -1;
+
+          return indexA - indexB;
+        })
+      : CATEGORY_ORDER;
   }, [projectList]);
 
   const [activeCategory, setActiveCategory] = useState<string>('Robotics');

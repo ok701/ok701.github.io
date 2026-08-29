@@ -30,9 +30,11 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
           fill
           className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
         />
-        <div className="absolute top-2 left-2 bg-[#0f172a]/75 backdrop-blur-sm text-white px-2 py-0.5 rounded-full text-[10px] font-medium">
-          {project.category}
-        </div>
+        {project.venueBadge && (
+          <div className="absolute top-2 left-2 bg-[#0f172a]/80 backdrop-blur-md text-white px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border border-white/10 shadow-sm">
+            {project.venueBadge}
+          </div>
+        )}
       </div>
 
       {/* Compact Content */}

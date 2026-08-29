@@ -40,6 +40,7 @@ export interface Project {
   videoUrl?: string;
   projectUrl?: string;
   links?: ProjectLink[];
+  venueBadge?: string;
 }
 
 export interface BackgroundItem {

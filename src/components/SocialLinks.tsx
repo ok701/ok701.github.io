@@ -82,16 +82,16 @@ export default function SocialLinks({ links }: SocialLinksProps) {
           const emailAddress = link.url.replace(/^mailto:/, '');
 
           return (
-            <div key={link.label} className="relative inline-block" ref={emailRef}>
+            <div key={link.label} className="relative inline-flex items-center" ref={emailRef}>
               <button
                 type="button"
                 onClick={() => setIsEmailOpen(!isEmailOpen)}
                 aria-expanded={isEmailOpen}
                 aria-haspopup="true"
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border transition-all duration-200 cursor-pointer ${
                   isEmailOpen
-                    ? 'bg-slate-900 text-white shadow-md'
-                    : 'text-slate-600 bg-white/90 border border-slate-200 shadow-[0_2px_6px_rgba(15,23,42,0.04)] hover:bg-white hover:text-slate-900 hover:border-slate-300 hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)] hover:-translate-y-0.5'
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-md'
+                    : 'text-slate-600 bg-white/90 border-slate-200 shadow-[0_2px_6px_rgba(15,23,42,0.04)] hover:bg-white hover:text-slate-900 hover:border-slate-300 hover:shadow-[0_4px_12px_rgba(15,23,42,0.08)] hover:-translate-y-0.5'
                 }`}
               >
                 {icons[link.icon]}
@@ -110,7 +110,7 @@ export default function SocialLinks({ links }: SocialLinksProps) {
               </button>
 
               {isEmailOpen && (
-                <div className="absolute left-0 mt-2 w-72 rounded-2xl bg-white/95 backdrop-blur-md p-3 shadow-2xl border border-slate-200/90 z-50 animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute top-full left-0 mt-2 w-72 rounded-2xl bg-white/95 backdrop-blur-md p-3 shadow-2xl border border-slate-200/90 z-50 animate-in fade-in zoom-in-95 duration-150">
                   {/* 이메일 주소 & 원클릭 복사 버튼 */}
                   <div className="flex items-center justify-between gap-2 p-2 bg-slate-50/90 rounded-xl border border-slate-200/70 mb-2">
                     <span className="text-xs font-mono font-medium text-slate-700 truncate select-all px-1">

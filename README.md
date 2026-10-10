@@ -5,6 +5,10 @@ A clean, academic-style personal portfolio website built with Next.js, TypeScrip
 ## Local Development
 
 ```bash
+# Using conda environment
+conda activate mp
+
+# Install dependencies & run development server
 npm install
 npm run dev
 ```
@@ -21,9 +25,9 @@ This generates a static export in the `out/` directory, ready for GitHub Pages.
 
 ## Deployment (GitHub Pages)
 
-1. Push this repository to GitHub as `<YOUR_USERNAME>.github.io`
-2. Go to **Settings → Pages → Source** and select **GitHub Actions**
-3. The included `.github/workflows/deploy.yml` will automatically build and deploy on every push to `main`
+1. This repository is hosted at [ok701.github.io](https://github.com/ok701/ok701.github.io)
+2. In GitHub repository **Settings → Pages → Source**, select **GitHub Actions**
+3. The included `.github/workflows/deploy.yml` automatically builds and deploys on every push to `main`
 
 ## Project Structure
 
@@ -110,10 +114,13 @@ Edit `src/data/news.ts`:
 - Add/remove news entries with `date`, `description`, and optional `link`
 - Entries are displayed in the order they appear in the array (newest first)
 
-### Background / Experience
+### Background / Experience Timeline
 Edit `src/data/background.ts`:
-- Organization, role, period, location, description bullets
-- Optional logo path
+- `order`: Display sequence (1, 2, 3...)
+- `year`: Timeline year badge
+- `organization`: University, company, or event name
+- `summary`: One-line highlight or achievement
+- `logo`: Image path in `public/images/organizations/`
 
 ### CV
 Replace `public/CV.pdf` with your updated CV.
@@ -124,4 +131,5 @@ Replace `public/CV.pdf` with your updated CV.
 - [React 19](https://react.dev/)
 - [TypeScript](https://www.typescriptlang.org/)
 - [Tailwind CSS 4](https://tailwindcss.com/)
+- [Google Analytics 4](https://analytics.google.com/) (Web Traffic Tracking)
 - [Google Fonts](https://fonts.google.com/) (Inter, Bodoni Moda)

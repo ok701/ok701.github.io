@@ -11,8 +11,15 @@ export default function Background() {
   const [displayItem, setDisplayItem] = useState<BackgroundItem | null>(null);
   const [mobileActiveIndex, setMobileActiveIndex] = useState(0);
   const expandedRef = useRef<HTMLDivElement>(null);
+  const desktopAreaRef = useRef<HTMLDivElement>(null);
+  const clearDisplayTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mobileScrollRef = useRef<HTMLDivElement>(null);
   const mobileScrollFrameRef = useRef<number | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const swapTokenRef = useRef(0);
+  const autoScrollUntilRef = useRef(0);
+  const [contentVisible, setContentVisible] = useState(true);
+  const [contentHeight, setContentHeight] = useState(0);
 
   useEffect(() => {
     const saved = localStorage.getItem('jwl_cms_background');
@@ -41,23 +48,142 @@ export default function Background() {
 
   const isOpen = selectedId !== null;
 
-  const handleSelect = useCallback((id: string) => {
-    setSelectedId((prev) => {
-      const next = prev === id ? null : id;
-      if (next !== null) {
-        setDisplayItem(sortedItems.find((i) => i.id === next) || null);
-        setTimeout(() => {
-          expandedRef.current?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'nearest',
+  const scheduleClearDisplay = useCallback(() => {
+    if (clearDisplayTimeoutRef.current) clearTimeout(clearDisplayTimeoutRef.current);
+    swapTokenRef.current += 1; // cancel any pending swap
+    clearDisplayTimeoutRef.current = setTimeout(() => {
+      setDisplayItem(null);
+      setContentVisible(true);
+      clearDisplayTimeoutRef.current = null;
+    }, 450);
+  }, []);
+
+  // Follow-scroll: for a short while after a click, ease the page down until the
+  // whole detail panel is visible. Runs per-frame because on first open the panel
+  // grows from 0px (the page isn't tall enough yet for a one-shot scroll), and the
+  // large photo may still be loading. Stops early if the user scrolls manually.
+  const stopAutoScrollRef = useRef<(() => void) | null>(null);
+  const startAutoScroll = useCallback(() => {
+    stopAutoScrollRef.current?.();
+    const startedAt = performance.now();
+    let raf = 0;
+    const stop = () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('wheel', stop);
+      window.removeEventListener('touchmove', stop);
+      window.removeEventListener('keydown', stop);
+      if (stopAutoScrollRef.current === stop) stopAutoScrollRef.current = null;
+    };
+    const step = () => {
+      const panel = expandedRef.current;
+      const area = desktopAreaRef.current;
+      const content = contentRef.current;
+      if (panel && area && content) {
+        const panelTop = panel.getBoundingClientRect().top;
+        const overflow = panelTop + content.offsetHeight + 24 - window.innerHeight;
+        // Never push the thumbnail strip up under the navbar
+        const maxDelta = area.getBoundingClientRect().top - 80;
+        const delta = Math.min(overflow, maxDelta);
+        if (delta > 0.5) {
+          window.scrollTo({
+            top: window.scrollY + Math.max(1, delta * 0.14),
+            behavior: 'instant' as ScrollBehavior,
           });
-        }, 100);
-      } else {
-        setTimeout(() => setDisplayItem(null), 450);
+        }
       }
-      return next;
-    });
-  }, [sortedItems]);
+      if (performance.now() - startedAt < 1600) raf = requestAnimationFrame(step);
+      else stop();
+    };
+    window.addEventListener('wheel', stop, { passive: true });
+    window.addEventListener('touchmove', stop, { passive: true });
+    window.addEventListener('keydown', stop);
+    stopAutoScrollRef.current = stop;
+    raf = requestAnimationFrame(step);
+  }, []);
+
+  const handleSelect = useCallback(
+    (id: string) => {
+      const item = sortedItems.find((i) => i.id === id) || null;
+
+      // Clicking the already-selected item closes it
+      if (selectedId === id) {
+        setSelectedId(null);
+        scheduleClearDisplay();
+        return;
+      }
+
+      if (clearDisplayTimeoutRef.current) {
+        clearTimeout(clearDisplayTimeoutRef.current);
+        clearDisplayTimeoutRef.current = null;
+      }
+
+      const token = ++swapTokenRef.current;
+      setSelectedId(id);
+      // Keep the detail in view while it (and its image) settles
+      autoScrollUntilRef.current = Date.now() + 2000;
+      startAutoScroll();
+
+      // Opening fresh: show immediately
+      if (selectedId === null || !displayItem) {
+        setDisplayItem(item);
+        setContentVisible(true);
+        return;
+      }
+
+      // Switching between items: fade out → (preload) swap → fade in
+      setContentVisible(false);
+      const start = Date.now();
+      let finished = false;
+      const finish = () => {
+        if (finished || swapTokenRef.current !== token) return;
+        finished = true;
+        const wait = Math.max(0, 240 - (Date.now() - start));
+        setTimeout(() => {
+          if (swapTokenRef.current !== token) return;
+          setDisplayItem(item);
+          requestAnimationFrame(() => {
+            if (swapTokenRef.current === token) setContentVisible(true);
+          });
+        }, wait);
+      };
+      if (item?.logo) {
+        const img = new window.Image();
+        img.onload = finish;
+        img.onerror = finish;
+        img.src = item.logo;
+        setTimeout(finish, 800); // don't wait forever on slow images
+      } else {
+        finish();
+      }
+    },
+    [sortedItems, selectedId, displayItem, scheduleClearDisplay, startAutoScroll]
+  );
+
+  // Measure detail content so the panel height can animate smoothly
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setContentHeight(el.offsetHeight));
+    ro.observe(el);
+    setContentHeight(el.offsetHeight);
+    return () => ro.disconnect();
+  }, [displayItem]);
+
+  // Clean up any running auto-scroll on unmount
+  useEffect(() => () => stopAutoScrollRef.current?.(), []);
+
+  // Click outside the desktop strip / expanded detail → reset to the original state
+  useEffect(() => {
+    if (!isOpen) return;
+    const handlePointerDown = (e: PointerEvent) => {
+      if (desktopAreaRef.current?.contains(e.target as Node)) return;
+      setSelectedId(null);
+      setHoveredIdx(null);
+      scheduleClearDisplay();
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [isOpen, scheduleClearDisplay]);
 
   // Track mobile scroll index
   const handleMobileScroll = () => {
@@ -83,14 +209,18 @@ export default function Background() {
   }, []);
 
   // Calculate size for index based on hoveredIdx (macOS Dock curve on desktop)
-  const getSize = (index: number) => {
-    const BASE_SIZE = 64;
-    if (hoveredIdx === null) return BASE_SIZE;
+  // When nothing is hovered, keep the magnification centered on the selected item.
+  const selectedIdx = selectedId ? sortedItems.findIndex((i) => i.id === selectedId) : -1;
+  const focusIdx = hoveredIdx ?? (selectedIdx >= 0 ? selectedIdx : null);
 
-    const dist = Math.abs(index - hoveredIdx);
-    if (dist < 0.5) return 104;
-    if (dist < 1.5) return 86;
-    if (dist < 2.5) return 72;
+  const getSize = (index: number) => {
+    const BASE_SIZE = 46;
+    if (focusIdx === null) return BASE_SIZE;
+
+    const dist = Math.abs(index - focusIdx);
+    if (dist < 0.5) return 100;
+    if (dist < 1.5) return 78;
+    if (dist < 2.5) return 60;
     return BASE_SIZE;
   };
 
@@ -197,14 +327,39 @@ export default function Background() {
         {/* ------------------------------------------------------------- */}
         {/* DESKTOP VIEW: macOS Dock Magnification Strip + Expandable Photo */}
         {/* ------------------------------------------------------------- */}
-        <div className="hidden sm:block">
-          {/* Thumbnail Strip with bold gray line stretching wide across */}
+        <div ref={desktopAreaRef} className="hidden sm:block">
+          {/* Thumbnail Strip with squiggle → arrow timeline stretching across */}
           <div className="w-full relative pt-1 pb-2 flex items-center justify-center overflow-visible">
-            {/* Bold solid gray timeline line stretching all the way across */}
+            {/* Timeline: wavy squiggle on the left that settles into a straight arrow */}
             <div
-              className="absolute left-0 right-0 pointer-events-none z-0 rounded-full bg-slate-300"
-              style={{ top: '50%', transform: 'translateY(-50%)', height: '4px' }}
-            />
+              aria-hidden="true"
+              className="absolute left-0 right-0 pointer-events-none z-0 flex items-center text-slate-300"
+              style={{ top: '50%', transform: 'translateY(-50%)', height: '112px' }}
+            >
+              <svg
+                viewBox="0 0 160 112"
+                className="h-full w-auto flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={3}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M2 86 C4 44, 9 14, 16 14 C25 14, 24 100, 35 100 C46 100, 44 18, 55 18 C66 18, 64 94, 76 94 C87 94, 86 30, 97 30 C108 30, 106 78, 118 78 C128 78, 130 56, 143 56 L160 56" />
+              </svg>
+              <div className="flex-1 h-[3px] bg-current -ml-px" />
+              <svg
+                viewBox="0 0 16 24"
+                className="h-6 w-4 flex-shrink-0 -ml-px"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={3}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M0 12 L14 12 M4 3 L14 12 L4 21" />
+              </svg>
+            </div>
 
             <div
               onMouseLeave={() => setHoveredIdx(null)}
@@ -219,12 +374,16 @@ export default function Background() {
                   return (
                     <button
                       key={item.id}
-                      onMouseEnter={() => setHoveredIdx(index)}
+                      onMouseEnter={() => {
+                        setHoveredIdx(index);
+                        // Warm the cache so the detail photo is ready on click
+                        if (item.logo) new window.Image().src = item.logo;
+                      }}
                       onClick={() => handleSelect(item.id)}
                       title={item.organization || item.id}
                       className={`
                         overflow-hidden bg-white relative cursor-pointer flex-shrink-0
-                        rounded-2xl focus:outline-none
+                        rounded-[22%] focus:outline-none
                         ${
                           isSelected
                             ? 'shadow-[0_10px_28px_rgba(0,0,0,0.2)] ring-2 ring-[#0f172a] z-20'
@@ -242,11 +401,7 @@ export default function Background() {
                       {item.logo ? (
                         <div
                           className="relative w-full h-full"
-                          style={{
-                            filter: 'blur(0.35px)',
-                            transform: 'translateZ(0)',
-                            backfaceVisibility: 'hidden',
-                          }}
+                          style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
                         >
                           <Image
                             src={item.thumbnail || item.logo}
@@ -274,25 +429,30 @@ export default function Background() {
             </div>
           </div>
 
-          {/* Expanded Detail (Desktop) */}
+          {/* Expanded Detail (Desktop) — height animates to measured content */}
           <div
             ref={expandedRef}
             className="overflow-hidden"
             style={{
-              maxHeight: isOpen ? '1000px' : '0px',
+              height: isOpen ? `${contentHeight}px` : '0px',
               opacity: isOpen ? 1 : 0,
               transition:
-                'max-height 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease',
+                'height 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease',
             }}
           >
             {displayItem && (
               <div
-                className="pt-4 pb-4 flex flex-col items-center text-center mt-2"
+                ref={contentRef}
+                className="pt-6 pb-4 flex flex-col items-center text-center"
                 style={{
-                  transform: isOpen ? 'translateY(0)' : 'translateY(-10px)',
-                  opacity: isOpen ? 1 : 0,
+                  transform:
+                    isOpen && contentVisible
+                      ? 'translateY(0) scale(1)'
+                      : 'translateY(10px) scale(0.985)',
+                  opacity: isOpen && contentVisible ? 1 : 0,
+                  filter: isOpen && contentVisible ? 'blur(0px)' : 'blur(4px)',
                   transition:
-                    'transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease',
+                    'transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease, filter 0.3s ease',
                 }}
               >
                 {/* Year displayed ABOVE the large photo */}
@@ -313,9 +473,15 @@ export default function Background() {
                         src={displayItem.logo}
                         alt={displayItem.organization || displayItem.id}
                         className="max-h-[440px] sm:max-h-[520px] w-auto h-auto object-contain block mx-auto rounded-none shadow-none"
-                        loading="lazy"
+                        loading="eager"
                         decoding="async"
                         draggable={false}
+                        onLoad={() => {
+                          // Photo arrived shortly after a click → follow the taller panel
+                          if (Date.now() < autoScrollUntilRef.current + 3000) {
+                            startAutoScroll();
+                          }
+                        }}
                         style={{
                           maskImage:
                             'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 75%, rgba(0,0,0,0) 100%)',
